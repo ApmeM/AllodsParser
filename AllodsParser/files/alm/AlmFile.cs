@@ -1,35 +1,10 @@
-﻿
-
-
+﻿using AllodsParser;
 using SimpleTiled;
 
-public class AlmFile
+public class AlmFile : BaseFile<AlmMap, TmxMap>
 {
-    public AlmData Data = new AlmData();
-    public ushort[] Tiles;
-    public sbyte[] Heights;
-    public byte[] Objects;
-    public AlmPlayer[] Players;
-    public AlmStructure[] Structures;
-    public AlmUnit[] Units;
-    public AlmLogic Logic;
-    public AlmMusic[] Music;
-    public AlmGroup[] Groups;
-    public AlmSack[] Sacks;
-    public AlmEffect[] Effects;
-    public AlmShop[] Shops;
-    public AlmOptionPointer[] Pointers;
-    public AlmInnInfo[] Inns;
-
-    public string filename;
-
-    public AlmFile(string filename, byte[] data)
+    protected override AlmMap? LoadInternal(MemoryStream ms, BinaryReader br)
     {
-        this.filename = filename;
-
-        using MemoryStream ms = new MemoryStream(data);
-        using BinaryReader br = new BinaryReader(ms);
-
         // first, read in the global header
         uint alm_signature = br.ReadUInt32();
         uint alm_headersize = br.ReadUInt32();
@@ -41,11 +16,11 @@ public class AlmFile
             (alm_headersize != 0x14) ||
             (alm_sectioncount < 3))
         {
-            Console.WriteLine($"Invalid signature of allods map {filename}.");
-            return;
+            Console.Error.WriteLine($"Invalid signature of allods map {relativeFilePath}.");
+            return null;
         }
 
-        var alm = this;
+        var alm = new AlmMap();
 
         bool DataLoaded = false;
         bool TilesLoaded = false;
@@ -68,8 +43,8 @@ public class AlmFile
                 case 1: // tiles
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for tiles");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for tiles");
+                        return null;
                     }
 
                     alm.Tiles = new ushort[alm.Data.Width * alm.Data.Height];
@@ -80,8 +55,8 @@ public class AlmFile
                 case 2: // heights
                     if (!TilesLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !TilesLoaded for heights");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !TilesLoaded for heights");
+                        return null;
                     }
 
                     alm.Heights = new sbyte[alm.Data.Width * alm.Data.Height];
@@ -92,8 +67,8 @@ public class AlmFile
                 case 3: // objects (obstacles)
                     if (!HeightsLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !HeightsLoaded for obstacles");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !HeightsLoaded for obstacles");
+                        return null;
                     }
 
                     alm.Objects = new byte[alm.Data.Width * alm.Data.Height];
@@ -103,8 +78,8 @@ public class AlmFile
                 case 4: // structures
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for structures");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for structures");
+                        return null;
                     }
 
                     alm.Structures = new AlmStructure[alm.Data.CountStructures];
@@ -117,8 +92,8 @@ public class AlmFile
                 case 5: // players
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for players");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for players");
+                        return null;
                     }
 
                     alm.Players = new AlmPlayer[alm.Data.CountPlayers];
@@ -131,8 +106,8 @@ public class AlmFile
                 case 6: // units
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for units");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for units");
+                        return null;
                     }
 
                     alm.Units = new AlmUnit[alm.Data.CountUnits];
@@ -145,8 +120,8 @@ public class AlmFile
                 case 7: // Logic
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for logic");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for logic");
+                        return null;
                     }
 
                     alm.Logic = new AlmLogic();
@@ -155,8 +130,8 @@ public class AlmFile
                 case 8: // Sack
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for sacks");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for sacks");
+                        return null;
                     }
 
                     alm.Sacks = new AlmSack[alm.Data.CountSacks];
@@ -169,8 +144,8 @@ public class AlmFile
                 case 9: // Effects
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for effects");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for effects");
+                        return null;
                     }
 
                     var numberOfEffects = br.ReadUInt32();
@@ -184,8 +159,8 @@ public class AlmFile
                 case 10: // Groups 
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for groups");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for groups");
+                        return null;
                     }
 
                     alm.Groups = new AlmGroup[alm.Data.CountGroups];
@@ -198,8 +173,8 @@ public class AlmFile
                 case 11: // Options
                     if (!DataLoaded)
                     {
-                        Console.WriteLine($"Invalid structure of allods map {filename}: !DataLoaded for options");
-                        return;
+                        Console.WriteLine($"Invalid structure of allods map {relativeFilePath}: !DataLoaded for options");
+                        return null;
                     }
 
                     alm.Inns = new AlmInnInfo[alm.Data.CountInns];
@@ -236,16 +211,18 @@ public class AlmFile
                     break;
             }
         }
+    
+        return alm;
     }
 
-    public void Save(string path)
+    protected override TmxMap? ConvertInternal(AlmMap toConvert)
     {
         var map = new TmxMap
         {
             Orientation = TmxOrientation.Orthogonal,
             RenderOrder = TmxRenderOrder.RightDown,
-            Width = (int)this.Data.Width,
-            Height = (int)this.Data.Height,
+            Width = (int)toConvert.Data.Width,
+            Height = (int)toConvert.Data.Height,
             TileWidth = 32,
             TileHeight = 32,
             TileSets = new List<TmxTileSet>(),
@@ -277,13 +254,13 @@ public class AlmFile
         map.Layers.Add(new TmxTileLayer
         {
             Name = "map",
-            Width = (int)this.Data.Width,
-            Height = (int)this.Data.Height,
+            Width = (int)toConvert.Data.Width,
+            Height = (int)toConvert.Data.Height,
             Visible = true,
             Data = new TmxData
             {
                 Encoding = "csv",
-                Tiles = this.Tiles.Select(a =>
+                Tiles = toConvert.Tiles.Select(a =>
                 {
 
                     ushort tile = a;
@@ -307,24 +284,28 @@ public class AlmFile
             }
         });
 
-        map.ObjectGroups.Add(new TmxObjectGroup
-        {
-            Name = "Structures",
-            Visible = true,
-            Objects = this.Structures.Select(a => new TmxObject
-            {
-                X = a.X,
-                Y = a.Y,
-                Width = a.Width,
-                Height = a.Height,
-                Gid = (uint)a.TypeID
-            }).ToList()
-        });
+        // map.ObjectGroups.Add(new TmxObjectGroup
+        // {
+        //     Name = "Structures",
+        //     Visible = true,
+        //     Objects = toConvert.Structures.Select(a => new TmxObject
+        //     {
+        //         X = a.X,
+        //         Y = a.Y,
+        //         Width = a.Width,
+        //         Height = a.Height,
+        //         Gid = (uint)a.TypeID
+        //     }).ToList()
+        // });
 
-        Directory.CreateDirectory(path);
-        using (var f = File.OpenWrite(Path.Combine(path, filename.Replace(".alm", ".tmx"))))
+        return map;
+    }
+
+    protected override void SaveInternal(string outputFileName, TmxMap toSave)
+    {
+        using (var f = File.OpenWrite(outputFileName.Replace(".alm", ".tmx")))
         {
-            TiledHelper.Write(map, f);
+            TiledHelper.Write(toSave, f);
         }
     }
 }

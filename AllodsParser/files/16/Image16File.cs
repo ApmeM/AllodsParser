@@ -1,13 +1,11 @@
-﻿using System.Numerics;
+﻿using AllodsParser;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-public class Image16File
+public class Image16File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
 {
-    private readonly string filename;
-
     private static void SpriteAddIXIY(ref int ix, ref int iy, uint w, uint add)
     {
         int x = ix;
@@ -26,14 +24,9 @@ public class Image16File
         iy = y;
     }
 
-    private readonly List<Image<Rgba32>> frames = new List<Image<Rgba32>>();
-
-    public Image16File(string filename, byte[] data)
+    protected override List<Image<Rgba32>>? LoadInternal(MemoryStream ms, BinaryReader br)
     {
-        this.filename = filename;
-
-        using MemoryStream ms = new MemoryStream(data);
-        using BinaryReader br = new BinaryReader(ms);
+        var frames = new List<Image<Rgba32>>();
 
         ms.Position = ms.Length - 4;
         int count = br.ReadInt32() & 0x7FFFFFFF;
@@ -50,7 +43,7 @@ public class Image16File
 
             if (w > 512 || h > 512 || ds > 1000000)
             {
-                Console.Error.WriteLine("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
+                Console.Error.WriteLine($"Invalid sprite {relativeFilePath}: Empty frame #{i}");
                 i--;
                 count--;
                 continue;
@@ -110,28 +103,29 @@ public class Image16File
 
             ms.Position = cpos + ds;
         }
+
+        return frames;
     }
 
-
-    public void Save(string path)
+    protected override Image<Rgba32>? ConvertInternal(List<Image<Rgba32>> toConvert)
     {
-        if (frames.Count == 0)
+        var newWidth = toConvert.Max(a => a.Width);
+        var newHeight = toConvert.Max(a => a.Height);
+
+        var result = new Image<Rgba32>(newWidth * toConvert.Count, newHeight);
+
+        for (int i = 0; i < toConvert.Count; i++)
         {
-            return;
-        }
-        Directory.CreateDirectory(path);
-
-        var newWidth = frames.Max(a => a.Width);
-        var newHeight = frames.Max(a => a.Height);
-
-        var result = new Image<Rgba32>(newWidth * frames.Count, newHeight);
-
-        for (int i = 0; i < frames.Count; i++)
-        {
-            result.Mutate(a => a.DrawImage(frames[i], new Point(newWidth * i, 0), 1));
+            result.Mutate(a => a.DrawImage(toConvert[i], new Point(newWidth * i, 0), 1));
             // this.frames[i].Save(Path.Join(path, filename.Replace(".256", $".frame{i}.png")), new PngEncoder());
         }
+        
+        return result;
+    }
 
-        result.Save(Path.Join(path, filename.Replace(".16", $".frame.all.png")), new PngEncoder());
+    protected override void SaveInternal(string outputFileName, Image<Rgba32> toSave)
+    {
+        toSave.Save(outputFileName.Replace(".16", $".frame.all.png"), new PngEncoder());
+
     }
 }

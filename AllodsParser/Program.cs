@@ -4,6 +4,18 @@ namespace AllodsParser
 {
     internal static class Program
     {
+        public static Dictionary<string, Func<IFile>> FileFactory = new Dictionary<string, Func<IFile>>{
+            {".bmp", ()=>new BinaryFile()},
+            {".png", ()=>new BinaryFile()},
+            {".wav", ()=>new BinaryFile()},
+            {".txt", ()=>new BinaryFile()},
+            {".reg", ()=>new RegFile()},
+            {".16",  ()=>new Image16File()},
+            {".16a", ()=>new Image16aFile()},
+            {".256", ()=>new Image256File()},
+            {".alm", ()=>new AlmFile()},
+        };
+
         public static void Main(string[] args)
         {
             var resources = "/home/vas/Downloads/Allods2_en/data/";
@@ -25,15 +37,30 @@ namespace AllodsParser
             Directory.CreateDirectory(result);
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            
-            foreach (var file in Directory.GetFiles(resources, "*.bmp", SearchOption.AllDirectories)) new BMPFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.wav", SearchOption.AllDirectories)) new BinaryFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.txt", SearchOption.AllDirectories)) new BinaryFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.reg", SearchOption.AllDirectories)) new RegistryFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.16", SearchOption.AllDirectories)) new Image16File(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.16a", SearchOption.AllDirectories)) new Image16aFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.256", SearchOption.AllDirectories)) new Image256File(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
-            foreach (var file in Directory.GetFiles(resources, "*.alm", SearchOption.AllDirectories)) new AlmFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
+
+            var knownUnknowns = new HashSet<string>();
+
+            foreach (var filePath in Directory.GetFiles(resources, "*.*", SearchOption.AllDirectories))
+            {
+                var ext = Path.GetExtension(filePath);
+                if (!FileFactory.ContainsKey(ext))
+                {
+                    if (!knownUnknowns.Contains(ext))
+                    {
+                        Console.WriteLine($"Unknown file extension: {ext}");
+                        knownUnknowns.Add(ext);
+                    }
+                    continue;
+                }
+
+                var relativePath = Path.GetRelativePath(resources, filePath);
+
+                var file = FileFactory[ext]();
+                file.Init(resources, relativePath);
+                file.Save(result);
+            }
+
+            // foreach (var file in Directory.GetFiles(resources, "*.alm", SearchOption.AllDirectories)) new AlmFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
         }
     }
 }

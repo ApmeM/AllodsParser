@@ -2,6 +2,7 @@ namespace AllodsParser
 {
     public interface IFile
     {
-        public void Save(string path);
+        public void Init(string inputFileBase, string relativeFilePath);
+        public void Save(string outputFileBase);
     }
 }
