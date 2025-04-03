@@ -4,16 +4,21 @@ namespace AllodsParser
 {
     internal static class Program
     {
-        public static Dictionary<string, Func<IFile>> FileFactory = new Dictionary<string, Func<IFile>>{
-            {".bmp", ()=>new BinaryFile()},
-            {".png", ()=>new BinaryFile()},
-            {".wav", ()=>new BinaryFile()},
-            {".txt", ()=>new BinaryFile()},
-            {".reg", ()=>new RegFile()},
-            {".16",  ()=>new Image16File()},
-            {".16a", ()=>new Image16aFile()},
-            {".256", ()=>new Image256File()},
-            {".alm", ()=>new AlmFile()},
+        public static Dictionary<string, Func<BaseFileLoader>> FileFactory = new Dictionary<string, Func<BaseFileLoader>>{
+            {".bmp", ()=>new BinaryFileLoader()},
+            {".png", ()=>new BinaryFileLoader()},
+            {".wav", ()=>new BinaryFileLoader()},
+            {".txt", ()=>new BinaryFileLoader()},
+            {".reg", ()=>new RegFileLoader()},
+            {".16",  ()=>new Image16FileLoader()},
+            {".16a", ()=>new Image16aFileLoader()},
+            {".256", ()=>new Image256FileLoader()},
+            {".alm", ()=>new AlmFileLoader()},
+        };
+
+        public static List<BaseFileConverter> FileConverters = new List<BaseFileConverter>{
+            new StructuresRegConverter(),
+            new AlmToTmxConverter()
         };
 
         public static void Main(string[] args)
@@ -40,6 +45,10 @@ namespace AllodsParser
 
             var knownUnknowns = new HashSet<string>();
 
+            var files = new List<BaseFile>();
+
+            Console.WriteLine("Loading...");
+
             foreach (var filePath in Directory.GetFiles(resources, "*.*", SearchOption.AllDirectories))
             {
                 var ext = Path.GetExtension(filePath);
@@ -47,7 +56,7 @@ namespace AllodsParser
                 {
                     if (!knownUnknowns.Contains(ext))
                     {
-                        Console.WriteLine($"Unknown file extension: {ext}");
+                        Console.Error.WriteLine($"Unknown file extension: {ext}");
                         knownUnknowns.Add(ext);
                     }
                     continue;
@@ -55,12 +64,19 @@ namespace AllodsParser
 
                 var relativePath = Path.GetRelativePath(resources, filePath);
 
-                var file = FileFactory[ext]();
-                file.Init(resources, relativePath);
-                file.Save(result);
+                var bytes = File.ReadAllBytes(filePath);
+
+                files.Add(FileFactory[ext]().Load(relativePath, bytes));
             }
 
-            // foreach (var file in Directory.GetFiles(resources, "*.alm", SearchOption.AllDirectories)) new AlmFile(Path.GetFileName(file), File.ReadAllBytes(file)).Save(Path.GetDirectoryName(file).Replace(resources, result + "/"));
+            Console.WriteLine("Converting...");
+            FileConverters.ForEach(a => a.Convert(files));
+
+            Console.WriteLine("Saving.");
+            foreach (var file in files)
+            {
+                file.Save(result);
+            }
         }
     }
 }

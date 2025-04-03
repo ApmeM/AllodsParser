@@ -1,28 +1,9 @@
 ﻿using AllodsParser;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
-public class Image256File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
+public class Image16FileLoader : BaseFileLoader
 {
-    // load palette
-    // this is also used in .256/.16a to retrieve own palette
-    private static Image<Rgba32> LoadPaletteFromStream(BinaryReader br)
-    {
-        var texture = new Image<Rgba32>(256, 1);
-
-        for (int i = 0; i < 256; i++)
-        {
-            byte b = br.ReadByte();
-            byte g = br.ReadByte();
-            byte r = br.ReadByte();
-            br.BaseStream.Position += 1; // byte a = br.ReadByte();
-            texture[i, 0] = new Rgba32(r, g, b, 255);
-        }
-        return texture;
-    }
-
     private static void SpriteAddIXIY(ref int ix, ref int iy, uint w, uint add)
     {
         int x = ix;
@@ -41,7 +22,7 @@ public class Image256File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
         iy = y;
     }
 
-    protected override List<Image<Rgba32>>? LoadInternal(MemoryStream ms, BinaryReader br)
+    protected override BaseFile LoadInternal(string relativeFilePath, MemoryStream ms, BinaryReader br)
     {
         var frames = new List<Image<Rgba32>>();
 
@@ -51,8 +32,6 @@ public class Image256File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
         ms.Position = 0;
 
         // read palette
-        var palette = LoadPaletteFromStream(br);
-
         for (int i = 0; i < count; i++)
         {
             uint w = br.ReadUInt32();
@@ -68,7 +47,8 @@ public class Image256File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
                 continue;
             }
 
-            Image<Rgba32> texture = new Image<Rgba32>((int)w, (int)h);
+            var texture = new Image<Rgba32>((int)w, (int)h);
+            frames.Add(texture);
 
             int ix = 0;
             int iy = 0;
@@ -78,7 +58,7 @@ public class Image256File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
                 ushort ipx = br.ReadByte();
                 ipx |= (ushort)(ipx << 8);
                 ipx &= 0xC03F;
-                ids--;
+                ids -= 1;
 
                 if ((ipx & 0xC000) > 0)
                 {
@@ -96,48 +76,35 @@ public class Image256File : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
                 else
                 {
                     ipx &= 0x3F;
+
+                    byte[] bytes = new byte[ipx];
+                    for (int j = 0; j < ipx; j++)
+                        bytes[j] = br.ReadByte();
+
                     for (int j = 0; j < ipx; j++)
                     {
-                        byte idx = br.ReadByte();
-                        //uint px = (ss << 16) | (ss << 8) | (ss) | 0xFF000000;
-
-                        texture[ix, iy] = palette[(int)idx, 0];
-
+                        uint alpha1 = (bytes[j] & 0x0Fu) | ((bytes[j] & 0x0Fu) << 4);
+                        texture[ix, iy] = new Rgba32((float)alpha1 / 255, 0, 0, 1);
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
+
+                        if (j != ipx - 1 || (bytes[bytes.Length - 1] & 0xF0) > 0)
+                        {
+                            uint alpha2 = (bytes[j] & 0xF0u) | ((bytes[j] & 0xF0u) >> 4);
+                            texture[ix, iy] = new Rgba32((float)alpha2 / 255, 0, 0, 1);
+                            SpriteAddIXIY(ref ix, ref iy, w, 1);
+                        }
                     }
 
                     ids -= ipx;
                 }
             }
 
-            frames.Add(texture);
             ms.Position = cpos + ds;
         }
 
-        return frames;
-    }
-
-    protected override Image<Rgba32>? ConvertInternal(List<Image<Rgba32>> toConvert)
-    {
-        if (toConvert.Count == 0)
+        return new ImageSpritesFile
         {
-            return null;
-        }
-
-        var newWidth = toConvert.Max(a => a.Width);
-        var newHeight = toConvert.Max(a => a.Height);
-
-        var result = new Image<Rgba32>(newWidth, newHeight * toConvert.Count);
-
-        for (int i = 0; i < toConvert.Count; i++)
-        {
-            result.Mutate(a => a.DrawImage(toConvert[i], new Point(0, newHeight * i), 1));
-        }
-        return result;
-    }
-
-    protected override void SaveInternal(string outputFileName, Image<Rgba32> toSave)
-    {
-        toSave.Save(outputFileName.Replace(".256", $".256.frame.all.png"), new PngEncoder());
+            Sprites = frames
+        };
     }
 }

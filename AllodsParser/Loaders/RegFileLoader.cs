@@ -1,16 +1,36 @@
-using System.Text.Json;
+using System.Text;
 
 namespace AllodsParser
 {
-    public class RegFile : BaseFile<Dictionary<string, object>, Dictionary<string, object>>
+    public class RegFileLoader : BaseFileLoader
     {
+        public enum RegistryNodeType
+        {
+            String = 0,
+            Directory = 1,
+            Int = 2,
+            Float = 4,
+            Array = 6
+        }
+
+
+        public static string UnpackByteString(int encoding, byte[] bytes)
+        {
+            var codePages = CodePagesEncodingProvider.Instance.GetEncoding(encoding);
+            string str_in = codePages.GetString(bytes);
+            string str_out = str_in;
+            int i = str_out.IndexOf('\0');
+            if (i >= 0) str_out = str_out.Substring(0, i);
+            return str_out;
+        }
+
         private static (string, object)? ReadValue(MemoryStream ms, BinaryReader br, uint data_origin)
         {
             br.BaseStream.Position += 4; // uint e_unk1 = msb.ReadUInt32();
             uint e_offset = br.ReadUInt32(); // 0x1C
             uint e_count = br.ReadUInt32(); // 0x18
             uint e_type = br.ReadUInt32();// 0x14
-            string e_name = Core.UnpackByteString(866, br.ReadBytes(16));
+            string e_name = UnpackByteString(866, br.ReadBytes(16));
 
             var name = e_name;
 
@@ -18,7 +38,7 @@ namespace AllodsParser
             {
                 case RegistryNodeType.String:
                     ms.Seek(data_origin + e_offset, SeekOrigin.Begin);
-                    return (name, Core.UnpackByteString(866, br.ReadBytes((int)e_count)));
+                    return (name, UnpackByteString(866, br.ReadBytes((int)e_count)));
                 case RegistryNodeType.Directory:
                     var first = e_offset;
                     var last = e_offset + e_count;
@@ -60,12 +80,12 @@ namespace AllodsParser
             }
         }
 
-        protected override Dictionary<string, object>? LoadInternal(MemoryStream ms, BinaryReader br)
+        protected override BaseFile LoadInternal(string relativeFilePath, MemoryStream ms, BinaryReader br)
         {
             if (br.ReadUInt32() != 0x31415926)
             {
                 Console.Error.WriteLine($"Couldn't load {relativeFilePath}: (not a registry file)");
-                return default;
+                return new EmptyFile();
             }
 
             uint root_offset = br.ReadUInt32();
@@ -84,23 +104,15 @@ namespace AllodsParser
                 if (newValue == null)
                 {
                     Console.Error.WriteLine($"Invalid content of registry file {relativeFilePath}");
-                    return default;
+                    return new EmptyFile();
                 }
                 root[newValue.Value.Item1] = newValue.Value.Item2;
             }
-            return root;
-        }
 
-        protected override Dictionary<string, object> ConvertInternal(Dictionary<string, object> toConvert)
-        {
-            return toConvert;
-        }
-
-        protected override void SaveInternal(string outputFileName, Dictionary<string, object> toSave)
-        {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            var json = JsonSerializer.Serialize(toSave, options);
-            File.WriteAllText(outputFileName, json);
+            return new RegFile
+            {
+                Root = root
+            };
         }
     }
 }

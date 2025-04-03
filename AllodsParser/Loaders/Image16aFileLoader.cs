@@ -1,13 +1,9 @@
 ﻿using AllodsParser;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
-public class Image16aFile : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
+public class Image16aFileLoader : BaseFileLoader
 {
-    // load palette
-    // this is also used in .256/.16a to retrieve own palette
     private static Image<Rgba32> LoadPaletteFromStream(BinaryReader br)
     {
         var texture = new Image<Rgba32>(256, 1);
@@ -41,7 +37,7 @@ public class Image16aFile : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
         iy = y;
     }
 
-    protected override List<Image<Rgba32>>? LoadInternal(MemoryStream ms, BinaryReader br)
+    protected override BaseFile LoadInternal(string relativeFilePath, MemoryStream ms, BinaryReader br)
     {
         var frames = new List<Image<Rgba32>>();
         ms.Position = ms.Length - 4;
@@ -52,7 +48,6 @@ public class Image16aFile : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
         // read palette
         var palette = LoadPaletteFromStream(br);
 
-        int oldCount = count;
         for (int i = 0; i < count; i++)
         {
             uint w = br.ReadUInt32();
@@ -116,9 +111,14 @@ public class Image16aFile : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
             ms.Position = cpos + ds;
         }
 
-        return frames;
+        return new ImageSpritesFile
+        {
+            Sprites = frames
+        };
     }
+}
 
+/*
     protected override Image<Rgba32>? ConvertInternal(List<Image<Rgba32>> toConvert)
     {
         var newWidth = toConvert.Max(a => a.Width);
@@ -133,9 +133,4 @@ public class Image16aFile : BaseFile<List<Image<Rgba32>>, Image<Rgba32>>
 
         return result;
     }
-
-    protected override void SaveInternal(string outputFileName, Image<Rgba32> toSave)
-    {
-        toSave.Save(outputFileName.Replace(".16a", $"16a.frame.all.png"), new PngEncoder());
-    }
-}
+*/
