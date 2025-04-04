@@ -6,13 +6,24 @@ namespace AllodsParser
     {
         public override List<BaseFile> Convert(List<BaseFile> files)
         {
-            var oldFile = files
+            var oldFiles = files
                 .OfType<RegFile>()
-                .First(a => a.relativeFilePath == "graphics/structures/structures.reg");
+                .Where(a => a.relativeFilePath == "graphics/structures/structures.reg")
+                .ToList();
 
-            var newFile = new StructureRegFile
+            var newFiles = oldFiles.SelectMany(a => ConvertFile(a, files)).ToList();
+
+            oldFiles.ForEach(f => files.Remove(f));
+            newFiles.ForEach(f => files.Add(f));
+
+            return files;
+        }
+
+        public IEnumerable<BaseFile> ConvertFile(RegFile toConvert, List<BaseFile> files)
+        {
+            yield return new StructureRegFile
             {
-                Structures = oldFile.Root
+                Structures = toConvert.Root
                     .Where(a => a.Key != "Global")
                     .Select(a =>
                     {
@@ -40,13 +51,9 @@ namespace AllodsParser
                     })
                     .ToList(),
                 relativeFileExtension = ".json",
-                relativeFileDirectory = oldFile.relativeFileDirectory,
-                relativeFileName = oldFile.relativeFileName
+                relativeFileDirectory = toConvert.relativeFileDirectory,
+                relativeFileName = toConvert.relativeFileName
             };
-
-            files.Remove(oldFile);
-            files.Add(newFile);
-            return files;
         }
     }
 }

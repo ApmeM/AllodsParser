@@ -18,7 +18,9 @@ namespace AllodsParser
 
         public static List<BaseFileConverter> FileConverters = new List<BaseFileConverter>{
             new StructuresRegConverter(),
-            new AlmToTmxConverter()
+            new StructuresImageConverter(),
+            new AlmToTmxConverter(),
+            new SpritesToImageList()
         };
 
         public static void Main(string[] args)

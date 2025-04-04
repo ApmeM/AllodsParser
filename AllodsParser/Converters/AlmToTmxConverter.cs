@@ -11,7 +11,7 @@ namespace AllodsParser
                 .OfType<AlmFile>()
                 .ToList();
 
-            var newFiles = oldFiles.Select(Convert).ToList();
+            var newFiles = oldFiles.SelectMany(a => ConvertFile(a, files)).ToList();
 
             oldFiles.ForEach(f => files.Remove(f));
             newFiles.ForEach(f => files.Add(f));
@@ -19,7 +19,7 @@ namespace AllodsParser
             return files;
         }
 
-        private TmxFile Convert(AlmFile toConvert)
+        private IEnumerable<TmxFile> ConvertFile(AlmFile toConvert, List<BaseFile> files)
         {
             var map = new TmxMap
             {
@@ -88,26 +88,41 @@ namespace AllodsParser
                 }
             });
 
-            // var structuresData = files
-            //     .OfType<RegFile>()
-            //     .First(a => a.relativeFilePath == "graphics/structures/structures.reg")
-            //     .innerData;
+            var structures = files
+                .OfType<StructureRegFile>()
+                .Single(a => a.relativeFileDirectory == "graphics/structures")
+                .Structures;
 
-            // map.ObjectGroups.Add(new TmxObjectGroup
-            // {
-            //     Name = "Structures",
-            //     Visible = true,
-            //     Objects = toConvert.Structures.Select(a => new TmxObject
-            //     {
-            //         X = a.X,
-            //         Y = a.Y,
-            //         Width = a.Width,
-            //         Height = a.Height,
-            //         Gid = (uint)a.TypeID
-            //     }).ToList()
-            // });
+            foreach (var structure in structures)
+            {
+                map.TileSets.Add(new TmxTileSet
+                {
+                    Name = structure.File,
+                    TileWidth = structure.TileWidth * 32,
+                    TileHeight = structure.TileHeight * 32,
+                    Image = new TmxImage
+                    {
+                        Source = $"../graphics/structures/{structure.File.Replace("\\", "/").ToLower()}.png"
+                    },
+                    FirstGid = 5500 + structure.Id
+                });
+            }
 
-            return new TmxFile
+            map.ObjectGroups.Add(new TmxObjectGroup
+            {
+                Name = "Structures",
+                Visible = true,
+                Objects = toConvert.Structures.Select(a => new TmxObject
+                {
+                    X = a.X * 32 - 16,
+                    Y = a.Y * 32 - 16,
+                    Width = a.Width,
+                    Height = a.Height,
+                    Gid = 5500 + (uint)a.TypeID
+                }).ToList()
+            });
+
+            yield return new TmxFile
             {
                 Map = map,
                 relativeFileExtension = ".tmx",
