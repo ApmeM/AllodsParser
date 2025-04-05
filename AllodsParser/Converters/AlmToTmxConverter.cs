@@ -160,6 +160,56 @@ namespace AllodsParser
                 }).ToList()
             });
 
+
+
+            var objects = files
+                .OfType<ObjectsRegFile>()
+                .Single()
+                .Objects
+                .Where(a => a.Id >= 0)
+                .ToList();
+
+            foreach (var obj in objects)
+            {
+                map.TileSets.Add(new TmxTileSet
+                {
+                    Name = obj.File,
+                    TileWidth = obj.Width,
+                    TileHeight = obj.Height,
+                    Image = new TmxImage
+                    {
+                        Source = !obj.File.ToLower().EndsWith("fire") ?
+                                $"../graphics/objects/{obj.File.ToLower()}.png" :
+                                $"../graphics/objects/{obj.File.Replace("fire", "dead").ToLower()}.png"
+                    },
+                    FirstGid = 7000 + obj.Id,
+                    TileOffset = new TmxTileOffset
+                    {
+                        X = -obj.CenterX,
+                        Y = -obj.CenterY
+                    }
+
+                });
+            }
+
+            map.Layers.Add(new TmxTileLayer
+            {
+                Name = "objects",
+                Width = (int)toConvert.Data.Width,
+                Height = (int)toConvert.Data.Height,
+                Visible = true,
+                Data = new TmxData
+                {
+                    Encoding = "csv",
+                    Tiles = toConvert.Objects.Select(a =>
+                        new TmxDataTile
+                        {
+                            Gid = a == 0 ? 0 : (uint)a + 7000 - 1,
+                        }
+                    ).ToList()
+                }
+            });
+
             yield return new TmxFile
             {
                 Map = map,
