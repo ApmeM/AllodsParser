@@ -37,6 +37,8 @@ namespace AllodsParser
 
                 var path = f.File.Split("\\");
 
+                f.File = path[0].ToLower();
+
                 var sprites = files
                     .OfType<ImageSpritesFile>()
                     .Where(a => a.relativeFileDirectory.EndsWith("/" + path[0], StringComparison.InvariantCultureIgnoreCase))
@@ -54,19 +56,18 @@ namespace AllodsParser
 
                 foreach (var sprite in sprites)
                 {
-
                     var newWidth = sprite.Sprites.Max(a => a.Width);
                     var newHeight = sprite.Sprites.Max(a => a.Height);
 
                     var framesCount = Math.Max(1, f.AnimFrame.Length);
                     var frameWidth = newWidth * f.TileWidth;
-                    var frameHeight = newHeight * f.TileHeight;
+                    var frameHeight = newHeight * f.FullHeight;
 
                     var result = new Image<Rgba32>(frameWidth * framesCount, frameHeight);
 
                     for (var frameNumber = 0; frameNumber < framesCount; frameNumber++)
                     {
-                        for (int j = 0; j < f.TileWidth * f.TileHeight; j++)
+                        for (int j = 0; j < f.TileWidth * f.FullHeight; j++)
                         {
                             result.Mutate(a => a.DrawImage(sprite.Sprites[j], new Point(newWidth * (j % f.TileWidth) + frameWidth * frameNumber, newHeight * (j / f.TileWidth)), 1));
                         }
@@ -78,8 +79,8 @@ namespace AllodsParser
                     {
                         Image = result,
                         relativeFileExtension = ".png",
-                        relativeFileDirectory = sprite.relativeFileDirectory,
-                        relativeFileName = sprite.relativeFileName
+                        relativeFileDirectory = toConvert.relativeFileDirectory,
+                        relativeFileName = f.File + (sprite.relativeFileName.EndsWith("b") ? "b" : "")
                     };
                 }
             }

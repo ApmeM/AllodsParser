@@ -1,4 +1,4 @@
-B&B box files converter
+Allods (Rage of mages) alm files converter
 ==========
 Console utility to convert original Allods (Rage of mages) resources into unpacked readable formats:
 

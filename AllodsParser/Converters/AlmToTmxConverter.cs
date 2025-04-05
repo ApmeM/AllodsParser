@@ -90,7 +90,7 @@ namespace AllodsParser
 
             var structures = files
                 .OfType<StructureRegFile>()
-                .Single(a => a.relativeFileDirectory == "graphics/structures")
+                .Single()
                 .Structures;
 
             foreach (var structure in structures)
@@ -99,12 +99,13 @@ namespace AllodsParser
                 {
                     Name = structure.File,
                     TileWidth = structure.TileWidth * 32,
-                    TileHeight = structure.TileHeight * 32,
+                    TileHeight = structure.FullHeight * 32,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/structures/{structure.File.Replace("\\", "/").ToLower()}.png"
+                        Source = $"../graphics/structures/{structure.File.Split("\\")[0].ToLower()}.png"
                     },
                     FirstGid = 5500 + structure.Id
+
                 });
             }
 
@@ -115,10 +116,47 @@ namespace AllodsParser
                 Objects = toConvert.Structures.Select(a => new TmxObject
                 {
                     X = a.X * 32 - 16,
-                    Y = a.Y * 32 - 16,
+                    Y = a.Y * 32 - 16 + a.Height,
                     Width = a.Width,
                     Height = a.Height,
                     Gid = 5500 + (uint)a.TypeID
+                }).ToList()
+            });
+
+            var units = files
+                .OfType<UnitRegFile>()
+                .Single()
+                .Units
+                .Where(a => a.Id >= 0)
+                .ToList();
+
+            foreach (var unit in units)
+            {
+                map.TileSets.Add(new TmxTileSet
+                {
+                    Name = unit.File,
+                    TileWidth = unit.Width,
+                    TileHeight = unit.Height,
+                    Image = new TmxImage
+                    {
+                        Source = $"../graphics/units/{unit.File.Replace("\\", "/").ToLower()}.png"
+                    },
+                    FirstGid = 6000 + unit.Id
+
+                });
+            }
+
+            map.ObjectGroups.Add(new TmxObjectGroup
+            {
+                Name = "Units",
+                Visible = true,
+                Objects = toConvert.Units.Select(a => new TmxObject
+                {
+                    X = a.X * 32 - 16,
+                    Y = a.Y * 32 - 16 + units.First(b => b.Id == a.TypeID).Height,
+                    Width = units.First(b => b.Id == a.TypeID).Width,
+                    Height = units.First(b => b.Id == a.TypeID).Height,
+                    Gid = 6000 + (uint)a.TypeID
                 }).ToList()
             });
 
