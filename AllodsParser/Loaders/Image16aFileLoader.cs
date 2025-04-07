@@ -63,7 +63,7 @@ public class Image16aFileLoader : BaseFileLoader
                 continue;
             }
 
-            Image<Rgba32> texture = new Image<Rgba32>((int)w, (int)h);
+            var texture = new Image<Rgba32>((int)w, (int)h);
 
             int ix = 0;
             int iy = 0;
@@ -97,9 +97,7 @@ public class Image16aFileLoader : BaseFileLoader
                         uint idx = ((ss & 0xFF00) >> 1) + ((ss & 0x00FF) >> 1);
                         idx &= 0xFF;
                         alpha &= 0xFF;
-                        var color = palette[(int)idx, 0];
-                        color.A = (byte)alpha;
-                        texture[ix, iy] = color;
+                        texture[ix, iy] = new Rgba32((byte)idx, (byte)idx, (byte)idx, (byte)alpha);
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
                     }
 
@@ -111,26 +109,14 @@ public class Image16aFileLoader : BaseFileLoader
             ms.Position = cpos + ds;
         }
 
-        return new ImageSpritesFile
+        /*
+        texture[ix, iy] = palette[(int)idx, 0];
+        texture[ix, iy].Alpha = (byte)alpha;
+        */
+        return new SpritesWithPalettesFile
         {
-            Sprites = frames
+            Sprites = frames,
+            Palettes = new List<Image<Rgba32>> { palette }
         };
     }
 }
-
-/*
-    protected override Image<Rgba32>? ConvertInternal(List<Image<Rgba32>> toConvert)
-    {
-        var newWidth = toConvert.Max(a => a.Width);
-        var newHeight = toConvert.Max(a => a.Height);
-
-        var result = new Image<Rgba32>(newWidth * toConvert.Count, newHeight);
-
-        for (int i = 0; i < toConvert.Count; i++)
-        {
-            result.Mutate(a => a.DrawImage(toConvert[i], new Point(newWidth * i, 0), 1));
-        }
-
-        return result;
-    }
-*/

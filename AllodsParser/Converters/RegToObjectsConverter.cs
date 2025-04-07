@@ -2,7 +2,7 @@ using SixLabors.ImageSharp;
 
 namespace AllodsParser
 {
-    public class ObjectsRegConverter : BaseFileConverter
+    public class RegToObjectsConverter : BaseFileConverter
     {
         public override List<BaseFile> Convert(List<BaseFile> files)
         {
@@ -11,6 +11,8 @@ namespace AllodsParser
                 .Where(a => a.relativeFilePath == "graphics/objects/objects.reg")
                 .ToList();
 
+            Console.WriteLine($"{this.GetType()} converts {oldFiles.Count} files");
+            
             var newFiles = oldFiles.SelectMany(a => ConvertFile(a, files)).ToList();
 
             oldFiles.ForEach(f => files.Remove(f));
@@ -24,21 +26,9 @@ namespace AllodsParser
             var fileList = ((Dictionary<string, object>)toConvert.Root["Files"])
                 .ToDictionary(
                     a => int.Parse(a.Key.Remove(0, "File".Length)),
-                    a =>
-                    {
-                        var path = ((string)a.Value).Split("\\");
-                        if (path.Length == 3)
-                        {
-                            return path[0] + "_" + path[1];
-                        }
-                        else
-                        {
-                            return path[0];
-                        }
+                    a => ((string)a.Value).Replace("\\", "/"));
 
-                    });
-
-            yield return new ObjectsRegFile
+            yield return new RegObjectsFile
             {
                 Objects = toConvert.Root
                     .Where(a => a.Key != "Global")
@@ -46,7 +36,7 @@ namespace AllodsParser
                     .Select(a =>
                     {
                         var value = (Dictionary<string, object>)a.Value;
-                        return new ObjectsRegFile.ObjectsFileContent
+                        return new RegObjectsFile.ObjectsFileContent
                         {
                             Description = GetString(value, "DescText"),
                             Parent = GetInt(value, "Parent"),

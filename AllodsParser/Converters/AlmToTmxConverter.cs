@@ -11,6 +11,8 @@ namespace AllodsParser
                 .OfType<AlmFile>()
                 .ToList();
 
+            Console.WriteLine($"{this.GetType()} converts {oldFiles.Count} files");
+
             var newFiles = oldFiles.SelectMany(a => ConvertFile(a, files)).ToList();
 
             oldFiles.ForEach(f => files.Remove(f));
@@ -89,7 +91,7 @@ namespace AllodsParser
             });
 
             var structures = files
-                .OfType<StructureRegFile>()
+                .OfType<RegStructureFile>()
                 .Single()
                 .Structures;
 
@@ -102,7 +104,7 @@ namespace AllodsParser
                     TileHeight = structure.FullHeight * 32,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/structures/{structure.File.Split("\\")[0].ToLower()}.png"
+                        Source = $"../graphics/structures/{structure.File.ToLower()}.png"
                     },
                     FirstGid = 5500 + structure.Id
 
@@ -124,7 +126,7 @@ namespace AllodsParser
             });
 
             var units = files
-                .OfType<UnitRegFile>()
+                .OfType<RegUnitsFile>()
                 .Single()
                 .Units
                 .Where(a => a.Id >= 0)
@@ -139,7 +141,7 @@ namespace AllodsParser
                     TileHeight = unit.Height,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/units/{unit.File.Replace("\\", "/").ToLower()}.png"
+                        Source = $"../graphics/units/{unit.File.ToLower()}.png"
                     },
                     FirstGid = 6000 + unit.Id
 
@@ -163,7 +165,7 @@ namespace AllodsParser
 
 
             var objects = files
-                .OfType<ObjectsRegFile>()
+                .OfType<RegObjectsFile>()
                 .Single()
                 .Objects
                 .Where(a => a.Id >= 0)

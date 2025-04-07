@@ -5,6 +5,7 @@ namespace AllodsParser
     internal static class Program
     {
         public static Dictionary<string, Func<BaseFileLoader>> FileFactory = new Dictionary<string, Func<BaseFileLoader>>{
+            {".ttf", ()=>new BinaryFileLoader()},
             {".bmp", ()=>new BinaryFileLoader()},
             {".png", ()=>new BinaryFileLoader()},
             {".wav", ()=>new BinaryFileLoader()},
@@ -14,17 +15,18 @@ namespace AllodsParser
             {".16a", ()=>new Image16aFileLoader()},
             {".256", ()=>new Image256FileLoader()},
             {".alm", ()=>new AlmFileLoader()},
+            {".pal", ()=>new PalFileLoader()},
         };
 
         public static List<BaseFileConverter> FileConverters = new List<BaseFileConverter>{
-            new StructuresRegConverter(),
-            new UnitsRegConverter(),
-            new ObjectsRegConverter(),
-            new StructuresImageConverter(),
-            new UnitsImageConverter(),
-            new ObjectsImageConverter(),
+            new RegToStructuresConverter(),
+            new RegToUnitsConverter(),
+            new RegToObjectsConverter(),
+            new PalMergerConverter(),
+            new UnitsPalMergerConverter(),
+            new StructuresReconstructionConverter(),
+            new SpritesToImageList(),
             new AlmToTmxConverter(),
-            new SpritesToImageList()
         };
 
         public static void Main(string[] args)

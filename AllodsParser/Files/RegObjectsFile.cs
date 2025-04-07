@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace AllodsParser
 {
-    public class ObjectsRegFile : BaseFile
+    public class RegObjectsFile : BaseFile
     {
         public class ObjectsFileContent
         {

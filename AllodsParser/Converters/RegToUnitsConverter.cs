@@ -2,7 +2,7 @@ using SixLabors.ImageSharp;
 
 namespace AllodsParser
 {
-    public class UnitsRegConverter : BaseFileConverter
+    public class RegToUnitsConverter : BaseFileConverter
     {
         public override List<BaseFile> Convert(List<BaseFile> files)
         {
@@ -10,6 +10,8 @@ namespace AllodsParser
                 .OfType<RegFile>()
                 .Where(a => a.relativeFilePath == "graphics/units/units.reg")
                 .ToList();
+
+            Console.WriteLine($"{this.GetType()} converts {oldFiles.Count} files");
 
             var newFiles = oldFiles.SelectMany(a => ConvertFile(a, files)).ToList();
 
@@ -24,9 +26,9 @@ namespace AllodsParser
             var fileList = ((Dictionary<string, object>)toConvert.Root["Files"])
                 .ToDictionary(
                     a => int.Parse(a.Key.Remove(0, "File".Length)),
-                    a => (string)a.Value);
+                    a => ((string)a.Value).Replace("\\", "/"));
 
-            yield return new UnitRegFile
+            yield return new RegUnitsFile
             {
                 Units = toConvert.Root
                     .Where(a => a.Key != "Global")
@@ -34,7 +36,7 @@ namespace AllodsParser
                     .Select(a =>
                     {
                         var value = (Dictionary<string, object>)a.Value;
-                        return new UnitRegFile.UnitFileContent
+                        return new RegUnitsFile.UnitFileContent
                         {
                             Description = GetString(value, "DescText"),
                             Parent = GetInt(value, "Parent"),

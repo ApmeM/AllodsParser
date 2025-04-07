@@ -14,6 +14,8 @@ namespace AllodsParser
             this.SaveInternal(outputFileName);
         }
 
-        protected abstract void SaveInternal(string outputFileName);
+        protected virtual void SaveInternal(string outputFileName){
+            Console.WriteLine($"File left unsaved: {outputFileName}");
+        }
     }
 }

@@ -66,7 +66,7 @@ public class Image256FileLoader : BaseFileLoader
                 continue;
             }
 
-            Image<Rgba32> texture = new Image<Rgba32>((int)w, (int)h);
+            var texture = new Image<Rgba32>((int)w, (int)h);
 
             int ix = 0;
             int iy = 0;
@@ -99,7 +99,7 @@ public class Image256FileLoader : BaseFileLoader
                         byte idx = br.ReadByte();
                         //uint px = (ss << 16) | (ss << 8) | (ss) | 0xFF000000;
 
-                        texture[ix, iy] = palette[(int)idx, 0];
+                        texture[ix, iy] = new Rgba32(idx, idx, idx, 255);
 
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
                     }
@@ -112,9 +112,10 @@ public class Image256FileLoader : BaseFileLoader
             ms.Position = cpos + ds;
         }
 
-        return new ImageSpritesFile
+        return new SpritesWithPalettesFile
         {
-            Sprites = frames
+            Sprites = frames,
+            Palettes = new List<Image<Rgba32>> { palette }
         };
     }
 }

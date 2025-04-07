@@ -2,7 +2,7 @@ using SixLabors.ImageSharp;
 
 namespace AllodsParser
 {
-    public class StructuresRegConverter : BaseFileConverter
+    public class RegToStructuresConverter : BaseFileConverter
     {
         public override List<BaseFile> Convert(List<BaseFile> files)
         {
@@ -10,6 +10,8 @@ namespace AllodsParser
                 .OfType<RegFile>()
                 .Where(a => a.relativeFilePath == "graphics/structures/structures.reg")
                 .ToList();
+
+            Console.WriteLine($"{this.GetType()} converts {oldFiles.Count} files");
 
             var newFiles = oldFiles.SelectMany(a => ConvertFile(a, files)).ToList();
 
@@ -21,18 +23,18 @@ namespace AllodsParser
 
         public IEnumerable<BaseFile> ConvertFile(RegFile toConvert, List<BaseFile> files)
         {
-            yield return new StructureRegFile
+            yield return new RegStructureFile
             {
                 Structures = toConvert.Root
                     .Where(a => a.Key != "Global")
                     .Select(a =>
                     {
                         var value = (Dictionary<string, object>)a.Value;
-                        return new StructureRegFile.StructuresFileContent
+                        return new RegStructureFile.StructuresFileContent
                         {
                             Description = (string)value["DescText"],
                             Id = (int)value["ID"],
-                            File = (string)value["File"],
+                            File = ((string)value["File"]).Replace("\\", "/"),
                             TileWidth = (int)value["TileWidth"],
                             TileHeight = (int)value["TileHeight"],
                             FullHeight = (int)value["FullHeight"],

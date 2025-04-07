@@ -666,10 +666,4 @@ public class AlmFile : BaseFile
     public AlmShop[] Shops;
     public AlmOptionPointer[] Pointers;
     public AlmInnInfo[] Inns;
-
-
-
-    protected override void SaveInternal(string outputFileName)
-    {
-    }
 }

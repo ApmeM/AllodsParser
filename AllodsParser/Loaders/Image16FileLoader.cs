@@ -102,9 +102,10 @@ public class Image16FileLoader : BaseFileLoader
             ms.Position = cpos + ds;
         }
 
-        return new ImageSpritesFile
+        return new SpritesWithPalettesFile
         {
-            Sprites = frames
+            Sprites = frames,
+            Palettes = new List<Image<Rgba32>>()
         };
     }
 }
