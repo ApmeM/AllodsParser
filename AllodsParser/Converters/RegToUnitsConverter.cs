@@ -36,19 +36,27 @@ namespace AllodsParser
                     .Select(a =>
                     {
                         var value = (Dictionary<string, object>)a.Value;
+
+                        var file = fileList[GetInt(value, "File")];
+                        var sprite = files
+                            .OfType<SpritesWithPalettesFile>()
+                            .Where(a => Path.Join(a.relativeFileDirectory, a.relativeFileName).EndsWith(file))
+                            .First()
+                            .Sprites[0];
+
                         return new RegUnitsFile.UnitFileContent
                         {
                             Description = GetString(value, "DescText"),
                             Parent = GetInt(value, "Parent"),
                             Id = GetInt(value, "ID"),
-                            File = fileList[GetInt(value, "File")],
+                            File = file,
                             Index = GetInt(value, "Index"),
                             MovePhases = GetInt(value, "MovePhases"),
                             MoveBeginPhases = GetInt(value, "MoveBeginPhases"),
                             AttackPhases = GetInt(value, "AttackPhases"),
                             DyingPhases = GetInt(value, "DyingPhases"),
-                            Width = GetInt(value, "Width"),
-                            Height = GetInt(value, "Height"),
+                            Width = sprite.Width, //GetInt(value, "Width") == -1 ? sprite.Width : GetInt(value, "Width"),
+                            Height = sprite.Height, //GetInt(value, "Height") == -1 ? sprite.Height : GetInt(value, "Height"),
                             CenterX = GetInt(value, "CenterX"),
                             CenterY = GetInt(value, "CenterY"),
                             SelectionX1 = GetInt(value, "SelectionX1"),
@@ -101,7 +109,7 @@ namespace AllodsParser
                 return new int[0];
             }
 
-            if(value[key].GetType() != typeof(int[]))
+            if (value[key].GetType() != typeof(int[]))
             {
                 return new int[0];
             }

@@ -36,16 +36,29 @@ namespace AllodsParser
                     .Select(a =>
                     {
                         var value = (Dictionary<string, object>)a.Value;
+
+                        var file = fileList[GetInt(value, "File")];
+                        var spriteFile = files
+                            .OfType<SpritesWithPalettesFile>()
+                            .Where(a => Path.Join(a.relativeFileDirectory, a.relativeFileName).EndsWith(file.Replace("fire", "dead")))
+                            .FirstOrDefault();
+
+                        if (spriteFile == null)
+                        {
+                            Console.WriteLine($"Sprite files not found for object {file}");
+                            return null;
+                        }
+
                         return new RegObjectsFile.ObjectsFileContent
                         {
                             Description = GetString(value, "DescText"),
                             Parent = GetInt(value, "Parent"),
                             Id = GetInt(value, "ID"),
-                            File = fileList[GetInt(value, "File")],
+                            File = file,
                             Index = GetInt(value, "Index"),
                             Phases = GetInt(value, "Phases"),
-                            Width = GetInt(value, "Width"),
-                            Height = GetInt(value, "Height"),
+                            Width = spriteFile.Sprites[0].Width, //GetInt(value, "Width") == -1 ? spriteFile.Sprites[0].Width : GetInt(value, "Width"),
+                            Height = spriteFile.Sprites[0].Height, //GetInt(value, "Height") == -1 ? spriteFile.Sprites[0].Height : GetInt(value, "Height"),
                             CenterX = GetInt(value, "CenterX"),
                             CenterY = GetInt(value, "CenterY"),
                             AnimationTime = GetIntArray(value, "AnimationTime"),
@@ -55,7 +68,8 @@ namespace AllodsParser
                             IconId = GetInt(value, "IconId"),
                         };
                     })
-                    .ToList(),
+                    .Where(a => a != null)
+                    .ToList()!,
                 relativeFileExtension = ".json",
                 relativeFileDirectory = toConvert.relativeFileDirectory,
                 relativeFileName = toConvert.relativeFileName

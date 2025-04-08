@@ -104,7 +104,7 @@ namespace AllodsParser
                     TileHeight = structure.FullHeight * 32,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/structures/{structure.File.ToLower()}.png"
+                        Source = $"../graphics/structures/{structure.File.ToLower()}.0.0.png"
                     },
                     FirstGid = 5500 + structure.Id
 
@@ -141,7 +141,7 @@ namespace AllodsParser
                     TileHeight = unit.Height,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/units/{unit.File.ToLower()}.png"
+                        Source = $"../graphics/units/{unit.File.ToLower()}.0.0.png"
                     },
                     FirstGid = 6000 + unit.Id
 
@@ -181,8 +181,8 @@ namespace AllodsParser
                     Image = new TmxImage
                     {
                         Source = !obj.File.ToLower().EndsWith("fire") ?
-                                $"../graphics/objects/{obj.File.ToLower()}.png" :
-                                $"../graphics/objects/{obj.File.Replace("fire", "dead").ToLower()}.png"
+                                $"../graphics/objects/{obj.File.ToLower()}.0.0.png" :
+                                $"../graphics/objects/{obj.File.Replace("fire", "dead").ToLower()}.0.0.png"
                     },
                     FirstGid = 7000 + obj.Id,
                     TileOffset = new TmxTileOffset
