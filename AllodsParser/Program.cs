@@ -25,7 +25,9 @@ namespace AllodsParser
             new PalMergerConverter(),
             new UnitsPalMergerConverter(),
             new StructuresReconstructionConverter(),
-            new SpritesToImageList(),
+            new SpriteToSeparateImageConverter(),
+            new SpriteToPerPaletteImageConverter(),
+            new SpriteToSingleImageConverter(),
             new AlmToTmxConverter(),
         };
 

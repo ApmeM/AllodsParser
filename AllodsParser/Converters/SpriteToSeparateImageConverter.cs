@@ -3,7 +3,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace AllodsParser
 {
-    public class SpritesToImageList : BaseFileConverter
+    public class SpriteToSeparateImageConverter : BaseFileConverter
     {
         public override List<BaseFile> Convert(List<BaseFile> files)
         {

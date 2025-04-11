@@ -214,17 +214,4 @@ public class AlmFileLoader : BaseFileLoader
     
         return alm;
     }
-/*
-    protected override TmxMap? ConvertInternal(AlmMap toConvert)
-    {
-        
-    }
-
-    protected override void SaveInternal(string outputFileName, TmxMap toSave)
-    {
-        using (var f = File.OpenWrite(outputFileName.Replace(".alm", ".tmx")))
-        {
-            TiledHelper.Write(toSave, f);
-        }
-    }*/
 }
