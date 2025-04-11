@@ -6,7 +6,7 @@ namespace AllodsParser
 {
     public class StructuresReconstructionConverter : BaseFileConverter
     {
-        public override List<BaseFile> Convert(List<BaseFile> files)
+        public override void Convert(List<BaseFile> files)
         {
             var oldFiles = files
                 .OfType<RegStructureFile>()
@@ -18,8 +18,6 @@ namespace AllodsParser
 
             // oldFiles.ForEach(f => files.Remove(f));
             newFiles.ForEach(f => files.Add(f));
-
-            return files;
         }
 
         private IEnumerable<ImageFile> ConvertFile(RegStructureFile toConvert, List<BaseFile> files)

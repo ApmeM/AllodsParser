@@ -2,7 +2,7 @@ namespace AllodsParser
 {
     public class PalMergerConverter : BaseFileConverter
     {
-        public override List<BaseFile> Convert(List<BaseFile> files)
+        public override void Convert(List<BaseFile> files)
         {
             var oldFiles = files
                 .OfType<PalFile>()
@@ -22,8 +22,6 @@ namespace AllodsParser
             });
 
             newFiles.ForEach(f => files.Add(f));
-
-            return files;
         }
 
         private IEnumerable<PalFile> ConvertFile(IGrouping<string, PalFile> toConvert, List<BaseFile> files)

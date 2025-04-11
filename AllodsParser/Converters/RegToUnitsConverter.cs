@@ -4,7 +4,7 @@ namespace AllodsParser
 {
     public class RegToUnitsConverter : BaseFileConverter
     {
-        public override List<BaseFile> Convert(List<BaseFile> files)
+        public override void Convert(List<BaseFile> files)
         {
             var oldFiles = files
                 .OfType<RegFile>()
@@ -17,8 +17,6 @@ namespace AllodsParser
 
             oldFiles.ForEach(f => files.Remove(f));
             newFiles.ForEach(f => files.Add(f));
-
-            return files;
         }
 
         public IEnumerable<BaseFile> ConvertFile(RegFile toConvert, List<BaseFile> files)

@@ -2,7 +2,7 @@ namespace AllodsParser
 {
     public class UnitsPalMergerConverter : BaseFileConverter
     {
-        public override List<BaseFile> Convert(List<BaseFile> files)
+        public override void Convert(List<BaseFile> files)
         {
             var oldFiles = files
                 .OfType<PalFile>()
@@ -15,8 +15,6 @@ namespace AllodsParser
 
             oldFiles.ForEach(f => files.Remove(f));
             newFiles.ForEach(f => files.Add(f));
-
-            return files;
         }
 
         private IEnumerable<SpritesWithPalettesFile> ConvertFile(PalFile toConvert, List<BaseFile> files)
