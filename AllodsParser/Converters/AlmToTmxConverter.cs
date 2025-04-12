@@ -21,6 +21,14 @@ namespace AllodsParser
 
         private IEnumerable<TmxFile> ConvertFile(AlmFile toConvert, List<BaseFile> files)
         {
+            var pngExt = Program.SpriteMergeVariant switch
+            {
+                Program.SpriteMergerFlags.SingleSprite => "",
+                Program.SpriteMergerFlags.PerPaletteSprite => ".0",
+                Program.SpriteMergerFlags.EachSprite => "{pngExt}",
+                _ => throw new NotImplementedException()
+            };
+
             var map = new TmxMap
             {
                 Orientation = TmxOrientation.Orthogonal,
@@ -102,7 +110,7 @@ namespace AllodsParser
                     TileHeight = structure.FullHeight * 32,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/structures/{structure.File.ToLower()}.0.0.png"
+                        Source = $"../graphics/structures/{structure.File.ToLower()}{pngExt}.png"
                     },
                     FirstGid = 5500 + structure.Id
 
@@ -139,7 +147,7 @@ namespace AllodsParser
                     TileHeight = unit.Height,
                     Image = new TmxImage
                     {
-                        Source = $"../graphics/units/{unit.File.ToLower()}.0.0.png"
+                        Source = $"../graphics/units/{unit.File.ToLower()}{pngExt}.png"
                     },
                     FirstGid = 6000 + unit.Id
 
@@ -177,8 +185,8 @@ namespace AllodsParser
                     Image = new TmxImage
                     {
                         Source = !obj.File.ToLower().EndsWith("fire") ?
-                                $"../graphics/objects/{obj.File.ToLower()}.0.0.png" :
-                                $"../graphics/objects/{obj.File.Replace("fire", "dead").ToLower()}.0.0.png"
+                                $"../graphics/objects/{obj.File.ToLower()}{pngExt}.png" :
+                                $"../graphics/objects/{obj.File.Replace("fire", "dead").ToLower()}{pngExt}.png"
                     },
                     FirstGid = 7000 + obj.Id,
                     TileOffset = new TmxTileOffset

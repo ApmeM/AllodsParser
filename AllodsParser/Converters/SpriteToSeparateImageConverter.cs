@@ -7,6 +7,11 @@ namespace AllodsParser
     {
         public override void Convert(List<BaseFile> files)
         {
+            if (Program.SpriteMergeVariant != Program.SpriteMergerFlags.EachSprite)
+            {
+                return;
+            }
+
             var oldFiles = files
                 .OfType<SpritesWithPalettesFile>()
                 .ToList();

@@ -4,6 +4,15 @@ namespace AllodsParser
 {
     internal static class Program
     {
+        public enum SpriteMergerFlags
+        {
+            SingleSprite,
+            PerPaletteSprite,
+            EachSprite
+        }
+
+        public static SpriteMergerFlags SpriteMergeVariant = SpriteMergerFlags.SingleSprite;
+
         public static Dictionary<string, Func<BaseFileLoader>> FileFactory = new Dictionary<string, Func<BaseFileLoader>>{
             {".ttf", ()=>new BinaryFileLoader()},
             {".bmp", ()=>new BinaryFileLoader()},
